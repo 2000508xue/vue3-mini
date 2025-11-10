@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分支切换和依赖清理</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <button id="flagBtn">flag</button>
+    <button id="nameBtn">name</button>
+    <button id="ageBtn">age</button>
+    <script type="module">
+      import { ref, effect } from '../dist/reactivity.esm.js'
+
+      const falg = ref(true)
+      const name = ref('renxue')
+      const age = ref(18)
+      const state = ref(100)
+
+      const e = effect(() => {
+        if (falg.value) {
+          app.innerHTML = name.value + ' -- ' + state.value
+        } else {
+          app.innerHTML = age.value + ' -- ' + state.value
+        }
+        console.log('effect')
+      })
+
+      flagBtn.onclick = function () {
+        debugger
+        falg.value = !falg.value
+      }
+
+      nameBtn.onclick = function () {
+        name.value = name.value + Math.random()
+      }
+
+      ageBtn.onclick = function () {
+        age.value++
+      }
+    </script>
+  </body>
+</html>

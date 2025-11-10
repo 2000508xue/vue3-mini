@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script type="module">
+      import { ref, effect } from '../dist/reactivity.esm.js'
+
+      const count = ref(0)
+
+      // const effect1 = effect(() => {
+      //   const effect2 = effect(() => {
+      //     console.log('嵌套的effect count.value => ', count.value)
+      //   })
+      //   console.log('外部的effect count.value => ', count.value)
+      // })
+
+      effect(
+        () => {
+          console.log('effect count.value => ', count.value)
+        },
+        {
+          scheduler: () => {
+            console.log('scheduler')
+          },
+        },
+      )
+
+      setTimeout(() => {
+        count.value++
+      })
+    </script>
+  </body>
+</html>
