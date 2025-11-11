@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script type="module">
+      import {
+        reactive,
+        effect,
+        ref,
+        computed,
+      } from '../dist/reactivity.esm.js'
+
+      const count = ref(1)
+
+      const doubleCount = computed(() => {
+        return count.value * 2
+      })
+
+      debugger
+
+      effect(() => {
+        console.log(count.value)
+        console.log(count.value)
+      })
+
+      setTimeout(() => {
+        count.value++
+      })
+    </script>
+  </body>
+</html>

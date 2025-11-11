@@ -84,6 +84,20 @@ export function link(dep, sub) {
   }
 }
 
+function processComputedUpdate(sub) {
+  /**
+   * 更新计算属性
+   * 1. 调用 update
+   * 2. 通知 sub 链表上所有的 sub 重新执行
+   *
+   * sub.update 返回了 true， 表示值发生了变化
+   *
+   */
+  if (sub.subs && sub.update()) {
+    propagate(sub.subs)
+  }
+}
+
 /**
  * 传播更新的函数
  * @param subs
@@ -93,8 +107,13 @@ export function propagate(subs) {
   let queueEffect = []
   while (link) {
     const sub = link.sub
-    if (!sub.tracking) {
-      queueEffect.push(sub)
+    if (!sub.tracking && !sub.dirty) {
+      sub.dirty = true
+      if ('update' in sub) {
+        processComputedUpdate(sub)
+      } else {
+        queueEffect.push(sub)
+      }
     }
     link = link.nextSub
   }
@@ -110,6 +129,7 @@ export function startTrack(sub) {
 export function endTrack(sub) {
   sub.tracking = false
   const depsTail = sub.depsTail
+  sub.dirty = false
   /**
    * depsTail 有，并且 depsTail 还有 nextDep，我们应该把他们的依赖关系清理掉
    * depsTail 没有，并且头结点有，那就把所有的都清理掉
@@ -127,7 +147,6 @@ export function endTrack(sub) {
 
 export function clearTracking(link: Link) {
   while (link) {
-    debugger
     const { nextSub, preSub, dep, nextDep } = link
     /**
      * 如果 prevSub 有，那就把 preSub 的 nextSub 指向下一个节点

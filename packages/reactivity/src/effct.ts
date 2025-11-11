@@ -3,6 +3,10 @@ import { Link } from './system'
 
 export let activeSub
 
+export function setActiveSub(sub) {
+  activeSub = sub
+}
+
 export class ReactiveEffect {
   /**
    * 依赖项链表的头结点
@@ -15,18 +19,26 @@ export class ReactiveEffect {
   depsTail: Link | undefined
 
   tracking = false
+
+  dirty = false
+
+  // 表示这个 effect 是否处于激活状态
+  active = true
   constructor(public fn) {}
 
   run() {
+    if (!this.active) {
+      return this.fn()
+    }
     // 每次执行 fn 前，先保存当前的 effect 实例
     const prevSub = activeSub
-    activeSub = this
+    setActiveSub(this)
     startTrack(this)
     try {
       return this.fn()
     } finally {
       endTrack(this)
-      activeSub = prevSub
+      setActiveSub(prevSub)
     }
   }
 
@@ -36,6 +48,15 @@ export class ReactiveEffect {
 
   notify() {
     this.scheduler()
+  }
+
+  stop() {
+    if (this.active) {
+      // 清理依赖
+      startTrack(this)
+      endTrack(this)
+      this.active = false
+    }
   }
 }
 

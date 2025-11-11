@@ -1,3 +1,5 @@
 export * from './ref'
 export * from './effct'
 export * from './reactive'
+export * from './computed'
+export * from './watch'
