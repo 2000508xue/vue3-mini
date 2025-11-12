@@ -34,10 +34,22 @@ export function track(target, key) {
 
 export function trigger(target, key) {
   const depsMap = targetMap.get(target)
-  if (!depsMap) return
-  const dep = depsMap.get(key)
-  if (!dep) return
-  propagate(dep.subs)
+
+  const targetIsArray = Array.isArray(target)
+  if (targetIsArray && key === 'length') {
+    const length = target.length
+    depsMap.forEach((dep, depKey) => {
+      if (depKey >= length || depKey === 'length') {
+        // 通知了访问了大于等于 length 的effct，重新执行
+        propagate(dep.subs)
+      }
+    })
+  } else {
+    if (!depsMap) return
+    const dep = depsMap.get(key)
+    if (!dep) return
+    propagate(dep.subs)
+  }
 }
 
 class Dep implements Dependency {

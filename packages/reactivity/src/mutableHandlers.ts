@@ -36,15 +36,26 @@ export const mutableHandlers = {
      */
     // 先set 再通知依赖，执行sub
     const oldValue = target[key]
-    const res = Reflect.set(target, key, newValue, receiver)
+
+    // 为了处理隐式更新length
+    const targetIsArray = Array.isArray(target)
+    const oldLength = targetIsArray ? target.length : 0
 
     if (isRef(oldValue) && !isRef(newValue)) {
       oldValue.value = newValue
-      return res
+      return true
     }
+
+    const res = Reflect.set(target, key, newValue, receiver)
 
     if (hasChanged(oldValue, newValue)) {
       trigger(target, key)
+    }
+
+    const newLength = targetIsArray ? target.length : 0
+
+    if (targetIsArray && oldLength !== newLength && key !== 'length') {
+      trigger(target, 'length')
     }
 
     return res

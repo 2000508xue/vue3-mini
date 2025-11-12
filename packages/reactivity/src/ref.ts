@@ -65,3 +65,51 @@ function triggerRef(dep) {
     propagate(dep.subs)
   }
 }
+
+class ObjectRefImpl {
+  [ReactiveFlags.IS_REF] = true
+  constructor(
+    public _object,
+    public _key,
+  ) {}
+
+  get value() {
+    return this._object[this._key]
+  }
+  set value(newValue) {
+    this._object[this._key] = newValue
+  }
+}
+
+export function toRef(target, key) {
+  return new ObjectRefImpl(target, key)
+}
+
+export function toRefs(target) {
+  const ret = {}
+  for (const key in target) {
+    ret[key] = toRef(target, key)
+  }
+  return ret
+}
+
+export function unref(ref) {
+  return isRef(ref) ? ref.value : ref
+}
+
+export function proxyRefs(target) {
+  return new Proxy(target, {
+    get(target, key, receiver) {
+      const res = Reflect.get(target, key, receiver)
+      return unref(res)
+    },
+    set(target, key, newValue, receiver) {
+      const oldValue = target[key]
+      if (isRef(oldValue) && !isRef(newValue)) {
+        oldValue.value = newValue
+        return true
+      }
+      return Reflect.set(target, key, newValue, receiver)
+    },
+  })
+}
