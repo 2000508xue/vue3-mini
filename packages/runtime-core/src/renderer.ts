@@ -1,5 +1,5 @@
 import { ShapeFlags } from '@vue/shared'
-import { isSameVNodeType } from './vnode'
+import { isSameVNodeType, normalizeVNode, Text } from './vnode'
 import { seq } from './seq'
 
 export function createRenderer(options) {
@@ -32,7 +32,8 @@ export function createRenderer(options) {
 
   const mountChildren = (children, container) => {
     for (let i = 0; i < children.length; i++) {
-      const child = children[i]
+      const child = (children[i] = normalizeVNode(children[i]))
+
       patch(null, child, container)
     }
   }
@@ -144,8 +145,8 @@ export function createRenderer(options) {
      *    结束： i = 2, e1 = 1, e2 = 2
      */
     while (i <= e1 && i <= e2) {
-      const n1 = c1[i]
-      const n2 = c2[i]
+      const n1 = (c1[i] = normalizeVNode(c1[i]))
+      const n2 = (c2[i] = normalizeVNode(c2[i]))
       if (isSameVNodeType(n1, n2)) {
         patch(n1, n2, container)
       } else {
@@ -162,8 +163,8 @@ export function createRenderer(options) {
      *    结束： i = 0, e1 = -1, e2 = 0
      */
     while (i <= e1 && i <= e2) {
-      const n1 = c1[e1]
-      const n2 = c2[e2]
+      const n1 = (c1[e1] = normalizeVNode(c1[e1]))
+      const n2 = (c2[e2] = normalizeVNode(c2[e2]))
       if (isSameVNodeType(n1, n2)) {
         patch(n1, n2, container)
       } else {
@@ -178,7 +179,8 @@ export function createRenderer(options) {
       const nextPos = e2 + 1
       const anchor = nextPos < c2.length ? c2[nextPos].el : null
       while (i <= e2) {
-        patch(null, c2[i++], container, anchor)
+        patch(null, (c2[i] = normalizeVNode(c2[i])), container, anchor)
+        i++
       }
     } else if (i > e2) {
       // 表示老的多，新的少，要删除
@@ -196,7 +198,8 @@ export function createRenderer(options) {
 
       // 遍历新的子节点 这些是还没有更新的 做一份 key => index map
       for (let j = s2; j <= e2; j++) {
-        keyToNewIndexMap.set(c2[j]?.key, j)
+        const n2 = (c2[j] = normalizeVNode(c2[j]))
+        keyToNewIndexMap.set(n2?.key, j)
       }
 
       let pos = -1
@@ -217,7 +220,6 @@ export function createRenderer(options) {
           patch(oldVnode, c2[newIndex], container)
         }
       }
-      debugger
 
       const increasingSeq = moved ? seq(newIndexToOldIndexMap) : []
       let j = increasingSeq.length - 1
@@ -256,6 +258,27 @@ export function createRenderer(options) {
     patchChildren(n1, n2)
   }
 
+  // 处理元素的挂载和更新
+  const processElement = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      mountElement(n2, container, anchor)
+    } else {
+      patchElement(n1, n2)
+    }
+  }
+
+  const processText = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      const el = (n2.el = hostCreateText(n2.children))
+      hostInsert(el, container, anchor)
+    } else {
+      const el = (n2.el = n1.el)
+      if (n2.children !== n1.children) {
+        hostSetText(el, n2.children)
+      }
+    }
+  }
+
   /**
    *
    * @param n1 旧 vnode
@@ -271,10 +294,17 @@ export function createRenderer(options) {
       n1 = null
     }
 
-    if (n1 === null) {
-      mountElement(n2, container, anchor)
-    } else {
-      patchElement(n1, n2)
+    const { shapeFlag, type } = n2
+    switch (type) {
+      case Text:
+        processText(n1, n2, container, anchor)
+        break
+
+      default:
+        if (shapeFlag & ShapeFlags.ELEMENT) {
+          processElement(n1, n2, container, anchor)
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+        }
     }
   }
 

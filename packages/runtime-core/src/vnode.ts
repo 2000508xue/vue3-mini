@@ -1,7 +1,16 @@
-import { ShapeFlags, isArray, isString } from '@vue/shared'
+import { ShapeFlags, isArray, isNumber, isString } from '@vue/shared'
+
+export const Text = Symbol('v-text')
 
 export function isVNode(value) {
   return value?.__v_isVNode
+}
+
+export function normalizeVNode(vnode) {
+  if (isString(vnode) || isNumber(vnode)) {
+    return createVNode(Text, null, String(vnode))
+  }
+  return vnode
 }
 
 export function isSameVNodeType(n1, n2) {
@@ -9,7 +18,7 @@ export function isSameVNodeType(n1, n2) {
 }
 
 export function createVNode(type, props?, children = null) {
-  let shapeFlag
+  let shapeFlag = 0
 
   // 判断type的类型
   if (isString(type)) {
