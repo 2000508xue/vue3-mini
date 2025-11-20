@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { h, render } from '../dist/vue.esm.js'
+
+      const vnode = h('div', { style: { color: 'red' }, class: 'red' }, [
+        h('p', '123'),
+        h('a', '333'),
+      ])
+      const vnode1 = h(
+        'div',
+        { style: { color: 'red', background: 'black' } },
+        'word',
+      )
+
+      render(vnode, app)
+
+      setTimeout(() => {
+        render(vnode1, app)
+      }, 1000)
+    </script>
+  </body>
+</html>

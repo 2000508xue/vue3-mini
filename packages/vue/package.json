@@ -18,5 +18,7 @@
       "global"
     ]
   },
-  "dependencies": {}
+  "dependencies": {
+    "@vue/runtime-dom": "workspace:*"
+  }
 }

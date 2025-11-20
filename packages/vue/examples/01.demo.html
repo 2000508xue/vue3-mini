@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import {
+        h,
+        render,
+        createRenderer,
+      } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+
+      /**
+       * vue 通过渲染器，将虚拟节点，转换成真是DOM，最终渲染到页面上
+       *
+       * vnode => render => 真实 DOM
+       *
+       * runtime-core 依赖了响应式模块儿 reactivity
+       * runtime-dom 依赖了 runtime-core
+       *
+       * vue 包导出了 runtime-dom
+       */
+
+      const renderer = createRenderer({
+        insert(el, parent, anchor) {
+          parent.insertBefore(el, anchor || null)
+        },
+        createElement(type) {
+          return document.createElement(type)
+        },
+        setElementText(el, text) {
+          el.textContent = text
+        },
+        remove() {},
+      })
+
+      console.log(`output->renderer`, renderer)
+
+      const vnode = h('div', {}, 'Hello Vue!')
+
+      render(vnode, app)
+    </script>
+  </body>
+</html>

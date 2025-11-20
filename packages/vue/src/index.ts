@@ -1,1 +1,1 @@
-export {}
+export * from '@vue/runtime-dom'
