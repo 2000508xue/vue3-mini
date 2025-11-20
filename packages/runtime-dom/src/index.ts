@@ -2,6 +2,7 @@ export * from '@vue/runtime-core'
 import { createRenderer } from '@vue/runtime-core'
 import { nodeOps } from './nodeOps'
 import { patchProp } from './patchProp'
+import { isString } from '@vue/shared'
 
 export const renderOptons = { patchProp, ...nodeOps }
 
@@ -13,4 +14,21 @@ const renderer = createRenderer(renderOptons)
 
 export function render(vnode, container) {
   return renderer.render(vnode, container)
+}
+
+export function createApp(rootComponent, rootProps) {
+  const app = renderer.createApp(rootComponent, rootProps)
+  const _mount = app.mount.bind(app)
+
+  function mount(selector) {
+    let el = selector
+    if (isString(el)) {
+      el = document.querySelector(el)
+    }
+    _mount(el)
+  }
+
+  app.mount = mount
+
+  return app
 }
