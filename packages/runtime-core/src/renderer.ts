@@ -2,6 +2,7 @@ import { ShapeFlags } from '@vue/shared'
 import { isSameVNodeType, normalizeVNode, Text } from './vnode'
 import { seq } from './seq'
 import { createAppAPI } from './apiCreateApp'
+import { createComponentInstance, setupComponent } from './component'
 
 export function createRenderer(options) {
   const {
@@ -268,6 +269,7 @@ export function createRenderer(options) {
     }
   }
 
+  // 处理文本的挂载和更新
   const processText = (n1, n2, container, anchor) => {
     if (n1 === null) {
       const el = (n2.el = hostCreateText(n2.children))
@@ -278,6 +280,27 @@ export function createRenderer(options) {
         hostSetText(el, n2.children)
       }
     }
+  }
+
+  const processComponent = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      mountComponent(n2, container, anchor)
+    } else {
+    }
+  }
+
+  const mountComponent = (vnode, container, anchor) => {
+    /**
+     * 1. 创建组件的实例
+     * 2. 初始化组件的状态
+     * 3. 将组件挂载到页面中
+     */
+    const instance = createComponentInstance(vnode)
+    setupComponent(instance)
+    // 调用 render 函数，拿到组件的子树（render返回的虚拟节点），this 指向 setup 返回的结果
+    const subTree = instance.render.call(instance.setupState)
+    debugger
+    patch(null, subTree, container, anchor)
   }
 
   /**
@@ -305,6 +328,7 @@ export function createRenderer(options) {
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(n1, n2, container, anchor)
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          processComponent(n1, n2, container, anchor)
         }
     }
   }
