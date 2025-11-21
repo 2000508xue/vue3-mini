@@ -22,4 +22,7 @@ export function isNumber(value) {
   return typeof value === 'number'
 }
 
+export const hasOwn = (val, key) =>
+  Object.prototype.hasOwnProperty.call(val, key)
+
 export const isArray = Array.isArray

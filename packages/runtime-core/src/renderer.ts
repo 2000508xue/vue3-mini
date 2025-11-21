@@ -301,14 +301,14 @@ export function createRenderer(options) {
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
         // 调用 render 函数，拿到组件的子树（render返回的虚拟节点），this 指向 setup 返回的结果
-        const subTree = instance.render.call(instance.setupState)
+        const subTree = instance.render.call(instance.proxy)
         // 将 subTree 挂载到页面中
         patch(null, subTree, container, anchor)
         instance.subTree = subTree
         instance.isMounted = true
       } else {
         const prevSubTree = instance.subTree
-        const subTree = instance.render.call(instance.setupState)
+        const subTree = instance.render.call(instance.proxy)
         patch(prevSubTree, subTree, container, anchor)
         instance.subTree = subTree
       }
