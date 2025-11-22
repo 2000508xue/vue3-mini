@@ -4,6 +4,7 @@ import { seq } from './seq'
 import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
 import { ReactiveEffect } from '@vue/reactivity'
+import { queueJob } from './scheduler'
 
 export function createRenderer(options) {
   const {
@@ -296,8 +297,18 @@ export function createRenderer(options) {
      * 2. 初始化组件的状态
      * 3. 将组件挂载到页面中
      */
+
+    // 创建组件实例
     const instance = createComponentInstance(vnode)
+
+    // 初始化组件的状态
     setupComponent(instance)
+
+    // 将组件挂载到页面中
+    setupRenderEffect(instance, container, anchor)
+  }
+
+  const setupRenderEffect = (instance, container, anchor) => {
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
         // 调用 render 函数，拿到组件的子树（render返回的虚拟节点），this 指向 setup 返回的结果
@@ -313,8 +324,17 @@ export function createRenderer(options) {
         instance.subTree = subTree
       }
     }
+
     const effect = new ReactiveEffect(componentUpdateFn)
-    effect.run()
+    const update = effect.run.bind(effect)
+
+    // 保存 effect.run 到 instance.update 中
+    instance.update = update
+
+    effect.scheduler = () => {
+      queueJob(update)
+    }
+    update()
   }
 
   /**
