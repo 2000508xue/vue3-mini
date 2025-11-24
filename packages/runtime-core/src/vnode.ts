@@ -6,6 +6,7 @@ import {
   isObject,
   isString,
 } from '@vue/shared'
+import { getCurrentRenderingInstance } from './component'
 
 export const Text = Symbol('v-text')
 
@@ -46,6 +47,14 @@ export function normalizeChildren(vnode, children) {
   vnode.children = children
 }
 
+function normalizeRef(ref) {
+  if (ref == null) return
+  return {
+    r: ref,
+    i: getCurrentRenderingInstance(),
+  }
+}
+
 export function createVNode(type, props?, children = null) {
   let shapeFlag = 0
 
@@ -66,6 +75,7 @@ export function createVNode(type, props?, children = null) {
     key: props?.key,
     el: null,
     shapeFlag,
+    ref: normalizeRef(props?.ref),
   }
 
   normalizeChildren(vnode, children)

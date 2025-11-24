@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   getCurrentInstance,
+      //   createApp,
+      //   h,
+      //   ref,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
+      import {
+        createApp,
+        h,
+        ref,
+        onMounted,
+        getCurrentInstance,
+        useTemplateRef,
+      } from '../dist/vue.esm.js'
+
+      const Child = {
+        setup(props, { expose }) {
+          /**
+           * 如果手动调用了 expose 方法，那么父组件通过 ref 获取到子组件实例的时候，只能获取到 expose 方法中暴露出去的属性 和 $props $attrs $slots
+           * 如果没有手动暴漏，那么父组件可以通过 ref 获取子组件的 instance.proxy
+           */
+          expose({
+            a: ref(10),
+            foo() {
+              console.log(`output-子组件暴漏出去的`)
+            },
+          })
+
+          return () => {
+            return h('div', '我是子组件的按钮')
+          }
+        },
+      }
+
+      const Parent = {
+        setup() {
+          const age = ref(18)
+          // const elRef = ref(null)
+
+          const vm = getCurrentInstance()
+
+          const elRef = useTemplateRef('elRef')
+
+          onMounted(() => {
+            console.log(`output->elRef.value.a`, elRef, vm)
+          })
+
+          return () => {
+            // return h(
+            //   'div',
+            //   { id: 'container', ref: elRef },
+            //   '我是父组件的P标签',
+            // )
+            // return h(Child, { ref: elRef })
+            return h(Child, { ref: 'elRef' })
+          }
+        },
+      }
+
+      createApp(Parent).mount('#app')
+    </script>
+  </body>
+</html>

@@ -5,10 +5,14 @@ import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
 import { ReactiveEffect } from '@vue/reactivity'
 import { queueJob } from './scheduler'
-import { shouldUpdateComponent } from './componentRenderUtils'
+import {
+  renderComponentRoot,
+  shouldUpdateComponent,
+} from './componentRenderUtils'
 import { updateProps } from './componentPorps'
 import { updateSlots } from './componentSlots'
 import { LifecycleHooks, triggerHooks } from './apiLifecycle'
+import { setRef } from './renderTemplateRef'
 
 export function createRenderer(options) {
   const {
@@ -37,14 +41,19 @@ export function createRenderer(options) {
 
   // 卸载元素的方法
   const unmount = vnode => {
-    const { shapeFlag, children } = vnode
+    const { shapeFlag, children, ref } = vnode
 
     if (shapeFlag & ShapeFlags.COMPONENT) {
       unmountComponent(vnode.component)
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       unmountChildren(children)
     }
+
     hostRemove(vnode.el)
+
+    if (ref != null) {
+      setRef(ref, null)
+    }
   }
 
   const mountChildren = (children, container) => {
@@ -366,7 +375,8 @@ export function createRenderer(options) {
         triggerHooks(instance, LifecycleHooks.BEFORE_MOUNT)
 
         // 调用 render 函数，拿到组件的子树（render返回的虚拟节点），this 指向 setup 返回的结果
-        const subTree = render.call(instance.proxy)
+        const subTree = renderComponentRoot(instance)
+
         // 将 subTree 挂载到页面中
         patch(null, subTree, container, anchor)
         // 组件 vnode.el 会指向 subTree.el 他们是相同的
@@ -388,7 +398,8 @@ export function createRenderer(options) {
         triggerHooks(instance, LifecycleHooks.BEFORE_UPDATE)
 
         const prevSubTree = instance.subTree
-        const subTree = render.call(instance.proxy)
+        const subTree = renderComponentRoot(instance)
+
         patch(prevSubTree, subTree, container, anchor)
         next.el = subTree.el
         instance.subTree = subTree
@@ -425,7 +436,7 @@ export function createRenderer(options) {
       n1 = null
     }
 
-    const { shapeFlag, type } = n2
+    const { shapeFlag, type, ref } = n2
     switch (type) {
       case Text:
         processText(n1, n2, container, anchor)
@@ -437,6 +448,10 @@ export function createRenderer(options) {
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
           processComponent(n1, n2, container, anchor)
         }
+    }
+
+    if (ref != null) {
+      setRef(ref, n2)
     }
   }
 

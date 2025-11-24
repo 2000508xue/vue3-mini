@@ -134,6 +134,10 @@ function createSetupContext(instance) {
       emit(instance, event, ...args)
     },
     slots: instance.slots,
+    expose(exposed) {
+      // 把用户传递的对象保存到当前的组件实例上
+      instance.exposed = exposed
+    },
   }
 }
 
@@ -159,4 +163,41 @@ export function getCurrentInstance() {
 
 export function unsetCurrentInstance() {
   currentInstance = null
+}
+
+// 当前正在渲染的组件实例
+let currentRenderingInstance
+
+export function setCurrentRenderingInstance(instance) {
+  currentRenderingInstance = instance
+}
+
+export function unsetCurrentRenderingInstance() {
+  currentRenderingInstance = null
+}
+
+export function getCurrentRenderingInstance() {
+  return currentRenderingInstance
+}
+
+// 获取到组件公开的属性
+export function getComponentPublicInstace(instance) {
+  if (instance.exposed) {
+    if (instance.exposedProxy) return instance.exposedProxy
+
+    instance.exposedProxy = new Proxy(proxyRefs(instance.exposed), {
+      get(target, key) {
+        if (key in target) {
+          return target[key]
+        }
+
+        if (key in publicPropertiesMap) {
+          return publicPropertiesMap[key](instance)
+        }
+      },
+    })
+    return instance.exposedProxy
+  } else {
+    return instance.proxy
+  }
 }
