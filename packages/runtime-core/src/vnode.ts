@@ -1,4 +1,11 @@
-import { ShapeFlags, isArray, isNumber, isObject, isString } from '@vue/shared'
+import {
+  ShapeFlags,
+  isArray,
+  isFunction,
+  isNumber,
+  isObject,
+  isString,
+} from '@vue/shared'
 
 export const Text = Symbol('v-text')
 
@@ -10,24 +17,39 @@ export function normalizeVNode(vnode) {
   if (isString(vnode) || isNumber(vnode)) {
     return createVNode(Text, null, String(vnode))
   }
-  return vnode
+  return vnode !== null && vnode !== undefined ? vnode : ''
 }
 
 export function isSameVNodeType(n1, n2) {
   return n1.type === n2.type && n1.key === n2.key
 }
 
-export function normalizeChildren(children) {
-  if (isNumber(children)) {
+export function normalizeChildren(vnode, children) {
+  let { shapeFlag } = vnode
+
+  // 追加子节点的类型
+  if (isString(children) || isNumber(children)) {
     children = String(children)
+    shapeFlag |= ShapeFlags.TEXT_CHILDREN
+  } else if (isArray(children)) {
+    shapeFlag |= ShapeFlags.ARRAY_CHILDREN
+  } else if (isFunction(children)) {
+    if (shapeFlag & ShapeFlags.COMPONENT) {
+      shapeFlag |= ShapeFlags.SLOTS_CHILDREN
+    }
+    children = { default: children }
+  } else if (isObject(children)) {
+    shapeFlag |= ShapeFlags.SLOTS_CHILDREN
   }
-  return children
+
+  vnode.shapeFlag = shapeFlag
+  vnode.children = children
 }
 
 export function createVNode(type, props?, children = null) {
-  children = normalizeChildren(children)
   let shapeFlag = 0
 
+  // 处理 type 的 shapeFlag
   // 判断type的类型
   if (isString(type)) {
     shapeFlag = ShapeFlags.ELEMENT
@@ -36,22 +58,17 @@ export function createVNode(type, props?, children = null) {
     shapeFlag = ShapeFlags.STATEFUL_COMPONENT
   }
 
-  // 追加子节点的类型
-  if (isString(children)) {
-    shapeFlag |= ShapeFlags.TEXT_CHILDREN
-  } else if (isArray(children)) {
-    shapeFlag |= ShapeFlags.ARRAY_CHILDREN
-  }
-
   const vnode = {
     __v_isVNode: true,
     type,
     props,
-    children,
+    children: null,
     key: props?.key,
     el: null,
     shapeFlag,
   }
+
+  normalizeChildren(vnode, children)
 
   return vnode
 }

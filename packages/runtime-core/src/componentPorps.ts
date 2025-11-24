@@ -36,3 +36,23 @@ export const initProps = instance => {
   instance.props = reactive(props)
   instance.attrs = attrs
 }
+
+export function updateProps(instance, nextVNode) {
+  const { props, attrs } = instance
+  const rawProps = nextVNode.props
+  // 设置所有的
+  setFullProps(instance, rawProps, props, attrs)
+
+  // 删除之前有 现在没有的
+  for (const key in props) {
+    if (!hasOwn(rawProps, key)) {
+      delete props[key]
+    }
+  }
+
+  for (const key in attrs) {
+    if (!hasOwn(rawProps, key)) {
+      delete attrs[key]
+    }
+  }
+}

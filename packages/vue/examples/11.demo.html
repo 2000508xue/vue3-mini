@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <button id="btn">count++</button>
+    <script type="module">
+      import {
+        createApp,
+        h,
+        ref,
+      } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      // import { createApp, h, ref } from '../dist/vue.esm.js'
+
+      const Child = {
+        props: ['age'],
+        setup(props) {
+          return () => {
+            console.log(`output->123`, 123)
+            return h('div', ['我是子组件', '我的年龄是：', props.age])
+          }
+        },
+      }
+
+      const Parent = {
+        setup(props, { attrs }) {
+          const age = ref(123)
+          btn.onclick = () => {
+            debugger
+            age.value++
+          }
+          return () => {
+            return h(Child, { age: 2 }, age.value)
+          }
+        },
+      }
+      createApp(Parent).mount('#app')
+    </script>
+  </body>
+</html>

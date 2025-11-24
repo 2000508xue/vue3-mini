@@ -2,6 +2,7 @@ import { proxyRefs } from '@vue/reactivity'
 import { initProps, normalizePropsOptions } from './componentPorps'
 import { hasOwn, isFunction, isObject } from '@vue/shared'
 import { nextTick } from './scheduler'
+import { initSlots } from './componentSlots'
 
 export const createComponentInstance = vnode => {
   const { type } = vnode
@@ -21,6 +22,8 @@ export const createComponentInstance = vnode => {
     setupContext: null,
   }
   instance.ctx = { _: instance }
+
+  instance.emit = (event, ...args) => emit(instance, event, ...args)
   return instance
 }
 
@@ -31,12 +34,16 @@ export const createComponentInstance = vnode => {
 export const setupComponent = instance => {
   // 初始化 props
   initProps(instance)
+  // 初始化 slots
+  initSlots(instance)
   // 初始化组件中的 状态和渲染函数
   setupStatefulComponent(instance)
 }
 
 const publicPropertiesMap = {
+  $el: instance => instance.vnode.el,
   $attrs: instance => instance.attrs,
+  $emit: instance => instance.emit,
   $slots: instance => instance.slots,
   $refs: instance => instance.refs,
   $nextTick: instance => {
@@ -121,5 +128,18 @@ function createSetupContext(instance) {
     get attrs() {
       return instance.attrs
     },
+    emit(event, ...args) {
+      emit(instance, event, ...args)
+    },
+    slots: instance.slots,
+  }
+}
+
+// 处理组件传递的事件
+function emit(instance, event, ...args) {
+  const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
+  const handler = instance.vnode.props[eventName]
+  if (handler && isFunction(handler)) {
+    handler(...args)
   }
 }
