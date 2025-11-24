@@ -7,6 +7,8 @@ import { ReactiveEffect } from '@vue/reactivity'
 import { queueJob } from './scheduler'
 import { shouldUpdateComponent } from './componentRenderUtils'
 import { updateProps } from './componentPorps'
+import { updateSlots } from './componentSlots'
+import { LifecycleHooks, triggerHooks } from './apiLifecycle'
 
 export function createRenderer(options) {
   const {
@@ -27,10 +29,19 @@ export function createRenderer(options) {
     }
   }
 
+  const unmountComponent = instance => {
+    triggerHooks(instance, LifecycleHooks.BEFORE_UNMOUNT)
+    unmount(instance.subTree)
+    triggerHooks(instance, LifecycleHooks.UNMOUNTED)
+  }
+
   // 卸载元素的方法
   const unmount = vnode => {
-    const { type, shapeFlag, children } = vnode
-    if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+    const { shapeFlag, children } = vnode
+
+    if (shapeFlag & ShapeFlags.COMPONENT) {
+      unmountComponent(vnode.component)
+    } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       unmountChildren(children)
     }
     hostRemove(vnode.el)
@@ -350,6 +361,10 @@ export function createRenderer(options) {
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
         const { vnode, render } = instance
+
+        // 触发 beforeMount 钩子函数
+        triggerHooks(instance, LifecycleHooks.BEFORE_MOUNT)
+
         // 调用 render 函数，拿到组件的子树（render返回的虚拟节点），this 指向 setup 返回的结果
         const subTree = render.call(instance.proxy)
         // 将 subTree 挂载到页面中
@@ -358,6 +373,8 @@ export function createRenderer(options) {
         vnode.el = subTree.el
         instance.subTree = subTree
         instance.isMounted = true
+
+        triggerHooks(instance, LifecycleHooks.MOUNTED)
       } else {
         let { vnode, render, next } = instance
         if (next) {
@@ -366,11 +383,18 @@ export function createRenderer(options) {
         } else {
           next = vnode
         }
+
+        // 触发 beforeUpdate 钩子函数
+        triggerHooks(instance, LifecycleHooks.BEFORE_UPDATE)
+
         const prevSubTree = instance.subTree
         const subTree = render.call(instance.proxy)
         patch(prevSubTree, subTree, container, anchor)
         next.el = subTree.el
         instance.subTree = subTree
+
+        // 触发 updated 钩子函数
+        triggerHooks(instance, LifecycleHooks.UPDATED)
       }
     }
 

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   getCurrentInstance,
+      //   createApp,
+      //   h,
+      //   ref,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
+      import { createApp, h, ref, getCurrentInstance } from '../dist/vue.esm.js'
+
+      const Child = {
+        setup(props, { emit, slots }) {
+          return () => {
+            return h('div', ['我是子组件的按钮', slots.default()])
+          }
+        },
+      }
+
+      const Parent = {
+        setup() {
+          const age = ref(18)
+          return () => {
+            return h(
+              Child,
+              {
+                age: age.value,
+              },
+              {
+                header: () => h('div', '父组件传递的插槽 header'),
+                default: () => h('div', '默认插槽'),
+                footer: () => h('div', '父组件传递的插槽 footer'),
+              },
+            )
+          }
+        },
+      }
+
+      createApp(Parent).mount('#app')
+    </script>
+  </body>
+</html>

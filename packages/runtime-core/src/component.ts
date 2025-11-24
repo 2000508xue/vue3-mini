@@ -102,7 +102,9 @@ function setupStatefulComponent(instance) {
   if (isFunction(type.setup)) {
     const setupContext = createSetupContext(instance)
     instance.setupContext = setupContext
+    setCurrentInstance(instance)
     const setupResult = type.setup(instance.props, setupContext)
+    unsetCurrentInstance()
     handleSetupResult(instance, setupResult)
   }
 
@@ -142,4 +144,19 @@ function emit(instance, event, ...args) {
   if (handler && isFunction(handler)) {
     handler(...args)
   }
+}
+
+let currentInstance = null
+
+// 设置当前组件实例
+export function setCurrentInstance(instance) {
+  currentInstance = instance
+}
+
+export function getCurrentInstance() {
+  return currentInstance
+}
+
+export function unsetCurrentInstance() {
+  currentInstance = null
 }
