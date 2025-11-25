@@ -7,6 +7,7 @@ export function createAppAPI(render) {
       provides: {},
     }
     const app = {
+      context,
       _container: null,
       mount(container) {
         // 创建组件的虚拟节点
@@ -15,6 +16,9 @@ export function createAppAPI(render) {
         vnode.appContext = context
         render(vnode, container)
         app._container = container
+      },
+      provide(key, value) {
+        context.provides[key] = value
       },
       unmount() {
         render(null, app._container)

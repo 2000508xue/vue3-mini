@@ -8,7 +8,6 @@ export const createComponentInstance = (vnode, parent) => {
   const { type } = vnode
 
   const appContext = parent ? parent.appContext : vnode.appContext
-
   const instance: any = {
     type,
     vnode,
@@ -25,6 +24,7 @@ export const createComponentInstance = (vnode, parent) => {
     setupState: {}, // setup返回的结果
     proxy: null,
     setupContext: null,
+    provides: parent ? parent.provides : appContext.provides,
   }
   instance.ctx = { _: instance }
 

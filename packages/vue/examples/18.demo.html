@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   getCurrentInstance,
+      //   createApp,
+      //   h,
+      //   ref,
+      //   provide,
+      //   inject,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
+      import {
+        createApp,
+        h,
+        ref,
+        provide,
+        inject,
+        getCurrentInstance,
+      } from '../dist/vue.esm.js'
+
+      const Child = {
+        name: 'Child',
+        setup() {
+          const count = inject('count')
+          const name = inject('name')
+
+          console.log(`output->count.vlaue`, count.value)
+          console.log(`output->name.value`, name)
+
+          console.log(`output->getCurrentInstance`, getCurrentInstance())
+
+          return () => {
+            return h('div', '我是子组件的按钮')
+          }
+        },
+      }
+
+      const Parent = {
+        name: 'Parent',
+        setup() {
+          const count = ref(0)
+
+          provide('count', count)
+
+          provide('name', '123123')
+
+          return () => {
+            return h(Child)
+          }
+        },
+      }
+
+      const app = createApp(Parent)
+      const name = ref('张三')
+      app.provide('name', name)
+      app.mount('#app')
+    </script>
+  </body>
+</html>
