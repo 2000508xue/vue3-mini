@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   getCurrentInstance,
+      //   createApp,
+      //   h,
+      //   ref,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
+      import {
+        createApp,
+        h,
+        ref,
+        onMounted,
+        getCurrentInstance,
+        useTemplateRef,
+      } from '../dist/vue.esm.js'
+
+      const Child = {
+        name: 'Child',
+        setup(props, { expose }) {
+          const vm = getCurrentInstance()
+          console.log('parent', vm.parent)
+          return () => {
+            return h('div', '我是子组件的按钮')
+          }
+        },
+      }
+
+      const Parent = {
+        name: 'Parent',
+        setup() {
+          return () => {
+            return h(Child)
+          }
+        },
+      }
+
+      createApp(Parent).mount('#app')
+    </script>
+  </body>
+</html>

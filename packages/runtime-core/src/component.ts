@@ -4,11 +4,16 @@ import { hasOwn, isFunction, isObject } from '@vue/shared'
 import { nextTick } from './scheduler'
 import { initSlots } from './componentSlots'
 
-export const createComponentInstance = vnode => {
+export const createComponentInstance = (vnode, parent) => {
   const { type } = vnode
+
+  const appContext = parent ? parent.appContext : vnode.appContext
+
   const instance: any = {
     type,
     vnode,
+    appContext,
+    parent,
     propsOptions: normalizePropsOptions(type.props), // 组件内部声明的props
     props: {},
     attrs: {},
