@@ -7,6 +7,7 @@ import {
   isString,
 } from '@vue/shared'
 import { getCurrentRenderingInstance } from './component'
+import { isTeleport } from './components/Teleport'
 
 export const Text = Symbol('v-text')
 
@@ -62,6 +63,8 @@ export function createVNode(type, props?, children = null) {
   // 判断type的类型
   if (isString(type)) {
     shapeFlag = ShapeFlags.ELEMENT
+  } else if (isTeleport(type)) {
+    shapeFlag = ShapeFlags.TELEPORT
   } else if (isObject(type)) {
     // 有状态的组件
     shapeFlag = ShapeFlags.STATEFUL_COMPONENT
