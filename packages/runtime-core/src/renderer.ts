@@ -42,7 +42,7 @@ export function createRenderer(options) {
 
   // 卸载元素的方法
   const unmount = vnode => {
-    const { shapeFlag, children, ref } = vnode
+    const { shapeFlag, children, ref, transition } = vnode
     if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
       // 我们虽然不用卸载 KeepAlive 要缓存的组件，但是我要告诉 KeepAlive 这个组件你已经被停用了
       const parentComponent = vnode.component.parent
@@ -60,7 +60,15 @@ export function createRenderer(options) {
       unmountChildren(children)
     }
 
-    hostRemove(vnode.el)
+    const remove = () => {
+      hostRemove(vnode.el)
+    }
+
+    if (transition) {
+      transition.leave(vnode.el, remove)
+    } else {
+      remove()
+    }
 
     if (ref != null) {
       setRef(ref, null)
@@ -82,7 +90,7 @@ export function createRenderer(options) {
      * 2. 将 vnode 的 props 挂载到 DOM 上
      * 3. 将 vnode 的 children 挂载到 DOM 上
      */
-    const { type, props, children, shapeFlag } = vnode
+    const { type, props, children, shapeFlag, transition } = vnode
     const el = (vnode.el = hostCreateElement(type))
 
     if (props) {
@@ -98,7 +106,15 @@ export function createRenderer(options) {
       mountChildren(children, el, parentComponent)
     }
 
+    if (transition) {
+      transition.beforeEnter?.(el)
+    }
+
     hostInsert(el, container, anchor)
+
+    if (transition) {
+      transition.enter?.(el)
+    }
   }
 
   const patchProps = (el, oldProps, newProps) => {
@@ -302,7 +318,7 @@ export function createRenderer(options) {
 
   // 处理元素的挂载和更新
   const processElement = (n1, n2, container, anchor, parentComponent) => {
-    if (n1 === null) {
+    if (n1 == null) {
       mountElement(n2, container, anchor, parentComponent)
     } else {
       patchElement(n1, n2, parentComponent)
@@ -431,7 +447,7 @@ export function createRenderer(options) {
         const subTree = renderComponentRoot(instance)
 
         patch(prevSubTree, subTree, container, anchor, instance)
-        next.el = subTree.el
+        next.el = subTree?.el
         instance.subTree = subTree
 
         // 触发 updated 钩子函数
@@ -460,6 +476,11 @@ export function createRenderer(options) {
   const patch = (n1, n2, container, anchor = null, parentComponent = null) => {
     // 如果两次传递了同一个虚拟节点，则不执行任何操作
     if (n1 === n2) return
+
+    if (n1 && n2 == null) {
+      unmount(n1)
+      return
+    }
 
     if (n1 && !isSameVNodeType(n1, n2)) {
       anchor = hostNextSibling(n1.el)
