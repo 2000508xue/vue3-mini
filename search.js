@@ -25,3 +25,15 @@ class LRUCache {
     this.cache.set(key, value)
   }
 }
+
+const nums = [1, 2, 3, 4, 5, 6]
+const f = new Array(nums.length).fill(0)
+for (let i = 0; i < nums.length; i++) {
+  if (i === 0) {
+    f[i] = nums[i]
+  } else {
+    f[i] = f[i - 1] + nums[i]
+  }
+}
+
+console.log(f)

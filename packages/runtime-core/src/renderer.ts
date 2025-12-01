@@ -1,5 +1,5 @@
 import { ShapeFlags } from '@vue/shared'
-import { isSameVNodeType, normalizeVNode, Text } from './vnode'
+import { Fragment, isSameVNodeType, normalizeVNode, Text } from './vnode'
 import { seq } from './seq'
 import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
@@ -42,11 +42,16 @@ export function createRenderer(options) {
 
   // 卸载元素的方法
   const unmount = vnode => {
-    const { shapeFlag, children, ref, transition } = vnode
+    const { shapeFlag, children, ref, transition, type } = vnode
     if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
       // 我们虽然不用卸载 KeepAlive 要缓存的组件，但是我要告诉 KeepAlive 这个组件你已经被停用了
       const parentComponent = vnode.component.parent
       parentComponent.ctx.deactivate(vnode)
+      return
+    }
+
+    if (type === Fragment) {
+      unmountChildren(children)
       return
     }
 
@@ -61,7 +66,7 @@ export function createRenderer(options) {
     }
 
     const remove = () => {
-      hostRemove(vnode.el)
+      vnode.el && hostRemove(vnode.el)
     }
 
     if (transition) {
@@ -338,6 +343,14 @@ export function createRenderer(options) {
     }
   }
 
+  const processFragment = (n1, n2, container, parentComponent) => {
+    if (n1 === null) {
+      mountChildren(n2.children, container, parentComponent)
+    } else {
+      patchChildren(n1, n2, container, parentComponent)
+    }
+  }
+
   const processComponent = (n1, n2, container, anchor, parentComponent) => {
     if (n1 === null) {
       if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
@@ -492,6 +505,9 @@ export function createRenderer(options) {
     switch (type) {
       case Text:
         processText(n1, n2, container, anchor)
+        break
+      case Fragment:
+        processFragment(n1, n2, container, parentComponent)
         break
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {

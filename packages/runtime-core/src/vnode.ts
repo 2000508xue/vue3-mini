@@ -11,6 +11,8 @@ import { isTeleport } from './components/Teleport'
 
 export const Text = Symbol('v-text')
 
+export const Fragment = Symbol('v-fragment')
+
 export function isVNode(value) {
   return value?.__v_isVNode
 }

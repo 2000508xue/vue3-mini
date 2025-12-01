@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import {
+        createApp,
+        h,
+        ref,
+        Fragment,
+        getCurrentInstance,
+        onMounted,
+      } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      // import {
+      //   createApp,
+      //   h,
+      //   ref,
+      //   Fragment,
+      //   onMounted,
+      //   getCurrentInstance,
+      // } from '../dist/vue.esm.js'
+
+      // 组件可以有多个根节点
+      const Child = {
+        name: 'Child',
+        setup() {
+          const age = ref(18)
+          const name = ref('张三')
+          const instance = getCurrentInstance()
+          // setTimeout(() => {
+          //   age.value = 20
+          // }, 1000)
+          return () =>
+            h(Fragment, null, [
+              h('div', null, age.value),
+              h('div', null, name.value),
+            ])
+        },
+      }
+
+      const App = {
+        name: 'App',
+        setup() {
+          const instance = getCurrentInstance()
+
+          onMounted(() => {
+            console.log(instance.refs.childRef)
+          })
+
+          return () => {
+            return h(Child, { ref: 'childRef' })
+          }
+        },
+      }
+      const app = createApp(App)
+      app.mount('#app')
+
+      setTimeout(() => {
+        app.unmount()
+      }, 1000)
+    </script>
+  </body>
+</html>
